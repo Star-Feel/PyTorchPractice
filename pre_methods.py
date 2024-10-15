@@ -3,6 +3,7 @@ from torch import nn
 import numpy as np
 import torch
 import pandas as pd
+import torch.utils
 from torch.utils.data import Dataset, DataLoader
 import torch.nn.functional as F
 import os
@@ -65,6 +66,7 @@ class RunnerV3(object):
         eval_steps = kwargs.get("eval_steps", 0)
         save_dir = kwargs.get("save_dir", "./checkpoint_auto")
         custom_print_log = kwargs.get("custom_print_log", None)
+        grad_clip = kwargs.get("grad_clip", None)
 
         num_training_steps = num_epochs * len(train_dataloader)
 
@@ -92,6 +94,9 @@ class RunnerV3(object):
                     print(f"[Train] epoch: {epoch}/{num_epochs}, step: {global_step}/{num_training_steps}, loss: {loss.item():.5f}")
 
                 loss.backward()
+
+                if grad_clip:
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=grad_clip)
 
                 if custom_print_log:
                     custom_print_log(self.model)
